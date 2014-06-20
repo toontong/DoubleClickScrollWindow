@@ -1,0 +1,1 @@
+#chrome extension *Double Click then auto to Scroll Window*
