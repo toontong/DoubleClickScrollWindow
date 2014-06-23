@@ -1,25 +1,20 @@
 /********************************
   run as background app in back.
   just run one.
+  popup.js与roller.js使用同一个background页面是为什么使用同一份localStorage作配置。
 ********************************/
 
-// Add icon to URL bar
-function checkForValidUrl(tabId, changeInfo, tab) {
-	chrome.pageAction.show(tab.id);
-};
 
-// Listen for any changes to the URL of any tab
-//chrome.tabs.onUpdated.addListener(checkForValidUrl);
 
-console.info("background.js load, just load once.");
+var KEY_LINE ='AUTO_SCROLL_LINE';
+var KEY_TIME ='AUTO_SCROLL_TIME';
+var KEY_ENABLE='AUTO_SCROLL_ENABLE';
 
-// Set the item in the localstorage
 function setItem(key, value) {
 	window.localStorage.removeItem(key);
 	window.localStorage.setItem(key, value);
 }
 
-// Get the item from local storage with the specified key
 function getItem(key) {
 	var value;
 	try {
@@ -29,48 +24,34 @@ function getItem(key) {
 	}
 	return value;
 }
+//---------------------
 
-var openedTabs = {}
+
 // Listeners
 chrome.extension.onMessage.addListener(
 	function(request, sender, sendResponse)
 	{
-        console.info('chrome.extension.onMessage');
 		switch (request.name)
 		{
 		case "setOptions":
-				// request from the content script to set the options.
-				localStorage.setItem("websiteIP_status", request.status);
+			setItem(KEY_LINE, request.line);
+			setItem(KEY_TIME, request.time);
+			if(request.enable){
+				setItem(KEY_ENABLE, "null");
+			}else{
+				setItem(KEY_ENABLE, "true");
+			}
+			sendResponse(request);
 			break;
 		case "getOptions":
-				// request from the content script to get the options.
 				sendResponse({
-					enableDisableIP : localStorage["websiteIP_status"]
+					time : getItem(KEY_TIME),
+					line : getItem(KEY_LINE),
+					enable:getItem(KEY_ENABLE)
 				});
 			break;
-		case "document_end": // new document load end
-            //chrome.pageAction.show(sender.tab.id);
-            
-			var currentURL = sender.tab.url;
-            openedTabs[currentURL] = sender;
-			if (currentIPList[currentURL] !== undefined) {
-				sendResponse({
-					domainToIP: currentIPList[currentURL]
-				});
-			} else {
-				sendResponse({
-					domainToIP: null
-				});
-			}
-			break;
-        case "roller":
-            //var currentURL = sender.tab.url;
-            //console.info('ROLLER: %s', currentURL);
-            alert('doc_end')
-            chrome.tabs.getCurrent(sendResponse);
-            break;
 		default:
-			sendResponse({url:sender.tab.url});
+			sendResponse({});
 		}
 	}
 );

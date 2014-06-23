@@ -1,6 +1,6 @@
 {
     "name": "ScreenRoller",
-    "version": "1.0.0",
+    "version": "0.0.1",
     "description": "An addin auto roll the screen in timer.",
     "minimum_chrome_version": "18",
     "manifest_version": 2,
@@ -16,15 +16,14 @@
     },
     "content_scripts": [ {
       "all_frames": false,
-      "js": [ "jquery.js", "roller.js" ],
+      "js": ["roller.js" ],
       "matches": [ "http://*/*", "https://*/*" ],
       "run_at": "document_end"
     } ],
 
     "permissions": [
         "http://*/*", "https://*/*",
-        "tabs", 
-        "webRequest"
+        "tabs"
     ],
     "update_url": "http://clients2.google.com/service/update2/crx"
 }

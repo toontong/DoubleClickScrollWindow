@@ -1,41 +1,47 @@
-// const
-
-function setItem(key, value) {
-	window.localStorage.removeItem(key);
-	window.localStorage.setItem(key, value);
-}
-
-// Get the item from local storage with the specified key
-function getItem(key) {
-	var value;
-	try {
-		value = window.localStorage.getItem(key);
-	}catch(e) {
-		value = "null";
-	}
-	return value;
-}
-
-// document_end
-$(document).ready(function() {
-
-
-});
 
 var currentpos, timer; 
-function initialize() 
+
+function _scrollwindow(srcTime) 
 { 
-    timer = setInterval(function(){scrollwindow()},10); 
+	chrome.extension.sendMessage({name: "getOptions"}, function(resp) {
+		if(!resp.enable){
+			return stop();
+		}
+		var currentpos = document.body.scrollTop + parseInt(resp.line);
+		window.scroll(0, currentpos);
+		
+		if (currentpos != document.body.scrollTop){
+			stop(); 
+		}
+		if (srcTime != resp.time){
+			stop();
+			
+			timer = setInterval(function(){
+				_scrollwindow(resp.time);
+			}, resp.time);
+		}
+	});
 } 
-function sc(){ 
+
+
+function start() 
+{
+	chrome.extension.sendMessage({name: "getOptions"}, function(resp) {
+
+		if(!resp.enable){
+			console.info("auto scroll window down is disable.");
+			return;
+		}
+
+		timer = setInterval(function(){
+			_scrollwindow(resp.time);
+		}, resp.time);
+	});
+}
+
+function stop(){ 
     clearInterval(timer); 
-} 
-function scrollwindow() 
-{ 
-    currentpos=document.body.scrollTop; 
-    window.scroll(0, ++currentpos); 
-    if (currentpos != document.body.scrollTop) 
-        sc(); 
-} 
-document.onmousedown=sc 
-document.ondblclick=initialize 
+}
+
+document.onmousedown = stop;
+document.ondblclick = start; 

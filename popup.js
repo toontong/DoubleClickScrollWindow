@@ -1,56 +1,42 @@
+function updateUI(time, line, enable){
+	
+	document.getElementById("timer").value = isNaN(Number(time)) ? 1000 : Number(time)/ 1000; 
+	document.getElementById("line").value =  isNaN(Number(line)) ? 100 : Number(line);
+	document.getElementById('enabled').checked = enable;
 
-var TIME_STPE = 1000; // 1 sec
-var LINE_ROLL = 5;
-var AUTO_ROLL = false;
-var TIMER_STOP=true;
+}
 
 function onClicked() {
-    console.info("onClicked function called.")
-    //TIME_STPE = document.getElementsByName("timer")[0].value;
 
-    LINE_ROLL = document.getElementById("line").value;
+	var enable = document.getElementById('enabled').checked;
+	var time = document.getElementById("timer").value;
+	var line = document.getElementById("line").value;
+	
+	time = isNaN(Number(time)) ? 1000 : Number(time) * 1000;
+	line = isNaN(Number(line)) ? 100 : Number(line);
 
-    AUTO_ROLL =! AUTO_ROLL;
-    if(!AUTO_ROLL){
-        document.getElementById('btSubmit').value="now is Disabled";
-    }
-    else{
-        document.getElementById('btSubmit').value="now is Enabled";
-        setTimeout(timerUpdateUI, TIME_STPE);
-    }
-    return true;
-}
-function updateUiState(){
-  document.getElementById("timer").value = TIME_STPE / 1000; // 1 sec
-  document.getElementById("line").value = LINE_ROLL;
+	chrome.extension.sendMessage({name: "setOptions",
+			time:time, line:line, enable: enable
+		}, function(resp) {
+		updateUI(time, line, enable);
+	});
 }
 
-function timerUpdateUI(e){
-    LINE_ROLL += 1;
-    updateUiState();
-    if(AUTO_ROLL){
-        
-        chrome.extension.sendMessage({name: "roller"}, function(response) {
-            console.info('getOptions response. %s');
-            console.info('getOptions response. %s', response.url);
-            LINE_ROLL = response.url;
-            setTimeout(timerUpdateUI, TIME_STPE);
-        });
-    }
-    //console.info('current timer=%s, roll line=%s. auto_roll_open=%s', TIME_STPE, LINE_ROLL, AUTO_ROLL);
+
+function loadOptions() {
+	chrome.extension.sendMessage({name: "getOptions"}, function(resp) {
+		updateUI(Number(resp.time), resp.line, resp.enable);
+	});
+
 }
 
-// popup button clicked
+// popup.html load event.
 document.addEventListener('DOMContentLoaded', function () {
-
-  document.getElementById('btSubmit').addEventListener(
-      'click', onClicked);
-
-  updateUiState();
+	// add button clicked event
+	document.getElementById('btSubmit').addEventListener(
+			'click', onClicked);
+	
+	loadOptions();
 });
 
-chrome.extension.sendMessage({name: "getOptions"},
-	function(response) {
-		document.getElementById("timer").value = response.time / 1000; // 1 sec
-		document.getElementById("line").value = response.line;
-});
+
